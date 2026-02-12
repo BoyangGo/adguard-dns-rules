@@ -24,6 +24,7 @@ jobs:
             "https://raw.githubusercontent.com/YanbingJiang/Shadowrocket_diy_rules/refs/heads/main/Archives/Youtube_Rule_Archive.conf"
             "https://raw.githubusercontent.com/neodevpro/neodevhost/master/adblocker"
             "https://adrules.top/dns.txt"
+            "https://github.com/BoyangGo/adguard-dns-rules/blob/main/adbyby.txt"
           )
 
           > merged.txt
