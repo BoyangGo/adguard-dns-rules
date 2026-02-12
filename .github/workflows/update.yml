@@ -3,7 +3,7 @@ name: Update AdGuard DNS List
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 19 * * *'
+    - cron: '0 19 * * *'  # UTC 时间每天 19 点
 
 permissions:
   contents: write
@@ -11,22 +11,36 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Fetch and merge lists
         run: |
-          curl -s https://raw.githubusercontent.com/neodevpro/neodevhost/master/adblocker > list1.txt
-          curl -s https://adrules.top/dns.txt > list2.txt
+          urls=(
+            "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-easylist.txt"
+            "https://raw.githubusercontent.com/217heidai/adblockfilters/main/rules/adblockdns.txt"
+            "https://raw.githubusercontent.com/AdguardTeam/AdguardFilters/master/MobileFilter/sections/specific_app.txt"
+            "https://easylist-downloads.adblockplus.org/easylist.txt"
+            "https://raw.githubusercontent.com/YanbingJiang/Shadowrocket_diy_rules/refs/heads/main/Archives/Youtube_Rule_Archive.conf"
+            "https://raw.githubusercontent.com/neodevpro/neodevhost/master/adblocker"
+            "https://adrules.top/dns.txt"
+          )
 
-          cat list1.txt list2.txt \
+          > merged.txt
+
+          for url in "${urls[@]}"; do
+            curl -s "$url"
+          done \
           | sed 's/#.*//' \
           | sed '/^$/d' \
           | sed 's/0.0.0.0 //g' \
           | sed 's/127.0.0.1 //g' \
+          | sed 's/||//' \
+          | sed 's/\^//' \
           | awk '{print $1}' \
           | sort -u > merged.txt
+
+          echo "# Total domains: $(wc -l < merged.txt)" >> merged.txt
 
       - name: Commit if changed
         run: |
