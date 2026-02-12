@@ -1,35 +1,40 @@
 name: Update AdGuard DNS List
 
 on:
-  schedule:
-    - cron: '0 19 * * *'   # 每天 UTC 19点 = 北京时间 3点
   workflow_dispatch:
+  schedule:
+    - cron: '0 19 * * *'
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Fetch and merge lists
-      run: |
-        curl -s https://raw.githubusercontent.com/neodevpro/neodevhost/master/adblocker > list1.txt
-        curl -s https://adrules.top/dns.txt > list2.txt
+      - name: Fetch and merge lists
+        run: |
+          curl -s https://raw.githubusercontent.com/neodevpro/neodevhost/master/adblocker > list1.txt
+          curl -s https://adrules.top/dns.txt > list2.txt
 
-        cat list1.txt list2.txt \
-        | sed 's/#.*//' \
-        | sed '/^$/d' \
-        | sed 's/0.0.0.0 //g' \
-        | sed 's/127.0.0.1 //g' \
-        | awk '{print $1}' \
-        | sort -u > merged.txt
+          cat list1.txt list2.txt \
+          | sed 's/#.*//' \
+          | sed '/^$/d' \
+          | sed 's/0.0.0.0 //g' \
+          | sed 's/127.0.0.1 //g' \
+          | awk '{print $1}' \
+          | sort -u > merged.txt
 
-    - name: Commit and push if changed
-      run: |
-        git config user.name "github-actions"
-        git config user.email "actions@github.com"
-        git add merged.txt
-        git diff --quiet && git diff --staged --quiet || git commit -m "Auto update DNS list"
-        git push
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add merged.txt
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto update DNS list"
+            git push
+          fi
